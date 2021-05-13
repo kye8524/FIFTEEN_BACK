@@ -4,8 +4,13 @@ var path = require('path');
 var cookieParser = require('cookie-parser');
 var logger = require('morgan');
 const cors =require('cors');
+const asyncify = require('express-asyncify');
 
-var app = express();
+const swaggerJSDoc = require('swagger-jsdoc');
+const swaggerOption = require('./swagger');
+const swaggerUi = require('swagger-ui-express');
+
+const app = asyncify(express());
 
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
@@ -25,7 +30,7 @@ const corsOptions = {
 };
 
 // middleware handle all request using cors options
-app.use(cors(corsOptions));
+app.use(cors());
 
 
 var indexRouter = require('./routes/index');
@@ -33,6 +38,10 @@ var usersRouter = require('./routes/users');
 app.use('/', indexRouter);
 app.use('/users', usersRouter);
 app.use('/product',require('./routes/product'));
+app.use('/auth',require('./routes/auth'));
+
+const swaggerSpec = swaggerJSDoc(swaggerOption);
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {

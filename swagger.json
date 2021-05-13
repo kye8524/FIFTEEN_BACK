@@ -1,0 +1,14 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "Title",
+    "description": "Title",
+    "version": "1.0.0"
+  },
+  "host": "http://localhost:3001/api-docs",
+  "schemes": [
+    "http"
+  ],
+  "paths": {
+  }
+}
