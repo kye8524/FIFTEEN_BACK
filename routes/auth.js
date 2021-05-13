@@ -46,6 +46,11 @@ router.get('/',async (req,res,next)=>{
  *     summary: 특정 회원 조회
  *     tags: [auth]
  *     parameters:
+ *       - in: header
+ *         name: x-access-token
+ *         type: string
+ *         format: uuid
+ *         required: true
  *       - in: path
  *         name: userSeq
  *         required: true
@@ -140,7 +145,6 @@ router.post('/signup', async (req, res, next) => {
         const token = jwt.sign(req.body.email, Date.now().toString(16), {
             algorithm: 'HS256'
         });
-        console.log("token ok")
         let insertData = {
             id : id,
             passwd : newPw,
