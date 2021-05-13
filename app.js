@@ -17,7 +17,16 @@ app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
-app.use(cors());
+const corsOptions = {
+  origin: '*',
+  credentials: true,
+  methods: ['GET', 'POST', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+};
+
+// middleware handle all request using cors options
+app.use(cors(corsOptions));
+
 
 var indexRouter = require('./routes/index');
 var usersRouter = require('./routes/users');
