@@ -143,17 +143,16 @@ router.post('/signup', async (req, res, next) => {
         console.log("token ok")
         let insertData = {
             id : id,
-            email : email,
             passwd : newPw,
-            accessToken : token,
             name : name,
             phoneNum : phoneNum,
+            email : email,
             signTime : Date.now(),
+            accessToken : token,
             salt : salt
         }
-        console.log(insertData)
 
-        const data = await pool.query('insert into UserInfo set ?',[insertData]);
+        const data = await pool.query('insert into UserInfo(id, passwd, name, phoneNum, email, signTime, accessToken, salt) values(?,?,?,?,?,?,?,?)',[id,newPw,name,phoneNum,email,Date.now(),token,salt]);
 
         return res.json(Object.assign(data[0],insertData))
     } catch (err) {
