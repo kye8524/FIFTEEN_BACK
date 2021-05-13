@@ -6,6 +6,8 @@ var logger = require('morgan');
 const cors =require('cors');
 const asyncify = require('express-asyncify');
 
+let tokenMiddleWare = require('./utils/token');
+
 const swaggerJSDoc = require('swagger-jsdoc');
 const swaggerOption = require('./swagger');
 const swaggerUi = require('swagger-ui-express');
@@ -22,16 +24,8 @@ app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
-const corsOptions = {
-  origin: '*',
-  credentials: true,
-  methods: ['GET', 'POST', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization']
-};
-
-// middleware handle all request using cors options
+app.use(tokenMiddleWare);
 app.use(cors());
-
 
 var indexRouter = require('./routes/index');
 var usersRouter = require('./routes/users');
