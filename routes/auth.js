@@ -3,8 +3,10 @@ let router = express.Router();
 const pool = require('../utils/pool');
 
 const jwt = require('jsonwebtoken');
-const crypto = require('crypto');
+const crypto = require('crypto-promise');
 const cUtil = require('../utils/util');
+const nodemailer = require('nodemailer');
+const smtpTransport = require('nodemailer-smtp-transport');
 require('dotenv').config()
 
 /**
@@ -13,6 +15,66 @@ require('dotenv').config()
  *   name: auth
  *   description: 회원가입 및 로그인
  */
+/**
+ * @swagger
+ * /auth :
+ *   get:
+ *     summary: 전체 회원 조회
+ *     tags: [auth]
+ *     responses:
+ *       200:
+ *         description: 성공
+ *       403:
+ *         $ref: '#/components/res/Forbidden'
+ *       404:
+ *         $ref: '#/components/res/NotFound'
+ *       400:
+ *         $ref: '#/components/res/BadRequest'
+ */
+router.get('/',async (req,res,next)=>{
+        try {
+            const data = await pool.query('select * from UserInfo')
+            return res.json(data[0])
+        }catch (err) {
+            return res.status(500).json(err)
+        }
+})
+/**
+ * @swagger
+ * /auth/{userSeq} :
+ *   get:
+ *     summary: 특정 회원 조회
+ *     tags: [auth]
+ *     parameters:
+ *       - in: path
+ *         name: userSeq
+ *         required: true
+ *         type: int
+ *         description: 회원 Seq 정보
+ *     responses:
+ *       200:
+ *         description: 성공
+ *       403:
+ *         $ref: '#/components/res/Forbidden'
+ *       404:
+ *         $ref: '#/components/res/NotFound'
+ *       400:
+ *         $ref: '#/components/res/BadRequest'
+ */
+router.get('/:userSeq',async (req,res,next)=>{
+    if(req.userInfo){
+        const {userSeq}=req.params;
+        try {
+            const data = await pool.query('select * from UserInfo where userSeq=?',[userSeq])
+            console.log(data[0][0]);
+            return res.json(data[0])
+        }catch (err) {
+            return res.status(500).json(err)
+        }
+    }else{
+        res.status(403).send({"message" : "Token error!"});
+    }
+})
 /**
  * @swagger
  * /auth/signup :
@@ -37,15 +99,12 @@ require('dotenv').config()
  *                          type: varchar(11)
  *                      email:
  *                          type: varchar(100)
- *                      gender:
- *                          type: varchar(1)
  *              required:
  *                  - id
  *                  - passwd
  *                  - name
  *                  - phoneNum
  *                  - email
- *                  - gender
  *     responses:
  *       200:
  *         description: 성공
@@ -56,74 +115,134 @@ require('dotenv').config()
  *       400:
  *         $ref: '#/components/res/BadRequest'
  */
-router.post('/signup',async (req,res,next) => {
+async function crypPw(password) {
+    let salt = "";
+    let newPw;
     try{
-        let array = {
-            email: req.body.email,
-            passwd: req.body.passwd,
-            name: req.body.name,
-            id: req.body.id,
-            gender: req.body.gender,
-            phoneNum: req.body.phoneNum
-        };
-        let param2 = {
-            name: array.name,
-            id: array.id,
-            email: array.email,
-            passwd: array.passwd,
-            gender: array.gender,
-            phoneNum: array.phoneNum,
-            signTime : Date.now()
-        };
-        const sql2 = "INSERT INTO UserInfo SET ?;";
-        await pool.query(sql2,param2, function (err, rows, fields) {
-            if (err) {
-                console.log("insert query error")
-                console.log(err);
-                res.status(500).send('500 SERVER ERROR, db3');
-            } else {
-                console.log('REGISTER SUCCESS');
-            }
-        })
+        let data = await crypto.randomBytes(64);
+        salt = data.toString();
+        let key = await crypto.pbkdf2(password, salt, 98523, 64, 'sha512');
+        newPw = key.toString('base64');
+        return [salt, newPw];
+    }catch (err) {
+        throw Error(err);
+    }
+}
 
-    }catch (err){
-        return res.status(400).json(err);
+
+router.post('/signup', async (req, res, next) => {
+    const { id,passwd,name,email,phoneNum} = req.body
+    try {
+        const pwData = await crypPw(passwd);
+        const salt = pwData[0];
+        const newPw = pwData[1];
+
+        const token = jwt.sign(req.body.email, Date.now().toString(16), {
+            algorithm: 'HS256'
+        });
+        let insertData = {
+            id : id,
+            email : email,
+            passwd : newPw,
+            accessToken : token,
+            name : name,
+            phoneNum : phoneNum,
+            signTime : Date.now(),
+            salt : salt
+        }
+
+        const data = await pool.query('insert into UserInfo set ?',[insertData]);
+
+        return res.json(Object.assign(data[0],insertData))
+    } catch (err) {
+        return res.status(500).json(err)
     }
 })
-
-function crypPw(password) {
-    return new Promise(function (resolve, reject) {
-        let salt = "";
-        let newPw;
-        crypto.randomBytes(64, function (err, buf) {
-            if (err) {
-                console.error(err);
-                res.status(500).send('500 SERVER ERROR');
-            } else {
-                salt = buf.toString('base64');
-                crypto.pbkdf2(password, salt, 98523, 64, 'sha512', function (error, key) {
-                    if (error) {
-                        console.log(error);
-                        res.status(400).send("crypto error");
-                    } else {
-                        newPw = key.toString('base64');
-                        console.log("crypto : "+newPw);
-                    }
-                })
+/**
+ * @swagger
+ * /auth/login :
+ *   post:
+ *     summary: 로그인
+ *     tags: [auth]
+ *     consumes:
+ *       - application/x-www-form-urlencoded
+ *     requestBody:
+ *       content:
+ *          application/x-www-form-urlencoded:
+ *              schema:
+ *                  type: object
+ *                  properties:
+ *                      id:
+ *                          type: varchar(45)
+ *                      passwd:
+ *                          type: text
+ *              required:
+ *                  - id
+ *                  - passwd
+ *     responses:
+ *       200:
+ *         description: 성공
+ *       403:
+ *         $ref: '#/components/res/Forbidden'
+ *       404:
+ *         $ref: '#/components/res/NotFound'
+ *       400:
+ *         $ref: '#/components/res/BadRequest'
+ */
+async function pwBySalt(password, salt) {
+    try {
+        let key = await crypto.pbkdf2(password, salt, 98523, 64, 'sha512');
+        return key.toString('base64');
+    }catch (err) {
+        throw Error(err);
+    }
+}
+router.post('/login', async (req, res, next)=>{
+    const {id, passwd} = req.body;
+    try{
+        let userData = await pool.query("SELECT * from UserInfo where id = ?", [id]);
+        if(userData[0][0]){
+            let newPw = await pwBySalt(passwd, userData[0][0].salt);
+            if(userData[0][0].passwd === newPw){
+                res.json(userData[0][0]);
+            }else{
+                res.status(403).send({"message":"Incorrect email or password"});
             }
-        })
-        setTimeout(() => {
-            resolve([salt, newPw]);
-        }, 500);
-    })
-}
-
-function pwBySalt(password, salt) {
-    return new Promise(function (resolve, reject) {
-        crypto.pbkdf2(password, salt, 98523, 64, 'sha512', function (err, key) {
-            resolve(key.toString('base64'));//replace추가
-        })
-    })
-}
-
+        }else{
+            res.status(403).send({"message":"Incorrect email or password"});
+        }
+    }catch (err) {
+        console.log(err);
+        res.status(500).json(err);
+    }
+})
+/**
+ * @swagger
+ * /auth/token :
+ *   get:
+ *     summary: 회원 토큰 로그인
+ *     tags: [auth]
+ *     parameters:
+ *       - in: header
+ *         name: x-access-token
+ *         type: string
+ *         format: uuid
+ *         required: true
+ *     responses:
+ *       200:
+ *         description: 성공
+ *       403:
+ *         $ref: '#/components/res/Forbidden'
+ *       404:
+ *         $ref: '#/components/res/NotFound'
+ *       400:
+ *         $ref: '#/components/res/BadRequest'
+ */
+router.get('/token', async (req, res, next)=>{
+    if(req.userInfo){
+        res.status(200).send(req.userInfo);
+    }else{
+        res.status(403).send({"message": "Token Error!"});
+    }
+})
 module.exports = router;
