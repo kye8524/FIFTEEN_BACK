@@ -140,6 +140,7 @@ router.post('/signup', async (req, res, next) => {
         const token = jwt.sign(req.body.email, Date.now().toString(16), {
             algorithm: 'HS256'
         });
+        console.log("token ok")
         let insertData = {
             id : id,
             email : email,
@@ -150,6 +151,7 @@ router.post('/signup', async (req, res, next) => {
             signTime : Date.now(),
             salt : salt
         }
+        console.log(insertData)
 
         const data = await pool.query('insert into UserInfo set ?',[insertData]);
 
