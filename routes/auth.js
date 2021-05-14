@@ -256,4 +256,40 @@ router.get('/token', async (req, res, next)=>{
         res.status(403).send({"message": "Token Error!"});
     }
 })
+/**
+ * @swagger
+ * /auth/signout :
+ *   delete:
+ *     summary: 회원 탈퇴
+ *     tags: [auth]
+ *     parameters:
+ *       - in: header
+ *         name: x-access-token
+ *         type: string
+ *         format: uuid
+ *         required: true
+ *     responses:
+ *       200:
+ *         description: 성공
+ *       403:
+ *         $ref: '#/components/res/Forbidden'
+ *       404:
+ *         $ref: '#/components/res/NotFound'
+ *       400:
+ *         $ref: '#/components/res/BadRequest'
+ */
+router.delete('/signout', async (req,res,next)=>{
+    if(req.userInfo){
+        try {
+            let userSeq = req.userInfo.userSeq;
+            const result = await pool.query('delete from UserInfo WHERE userSeq=?',userSeq);
+            return res.json(result[0])
+        } catch (err) {
+            res.status(400).json(err);
+        }
+    }else {
+        console.log('cookie none');
+        res.status(403).send({msg: "권한이 없습니다."});
+    }
+})
 module.exports = router;
