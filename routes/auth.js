@@ -137,31 +137,37 @@ async function crypPw(password) {
 
 router.post('/signup', async (req, res, next) => {
     const { id,passwd,name,email,phoneNum} = req.body
-    try {
-        const pwData = await crypPw(passwd);
-        const salt = pwData[0];
-        const newPw = pwData[1];
+    const data = await pool.query("select * from UserInfo where id=?",[id]);
+    if(data[0][0]){
+        res.status(403).send('<script type="text/javascript">alert("이미 존재하는 아이디입니다.");history.back();</script>')
+    }else{
+        try {
+            const pwData = await crypPw(passwd);
+            const salt = pwData[0];
+            const newPw = pwData[1];
 
-        const token = jwt.sign(req.body.email, Date.now().toString(16), {
-            algorithm: 'HS256'
-        });
-        let insertData = {
-            id : id,
-            passwd : newPw,
-            name : name,
-            phoneNum : phoneNum,
-            email : email,
-            signTime : Date.now(),
-            accessToken : token,
-            salt : salt
+            const token = jwt.sign(req.body.email, Date.now().toString(16), {
+                algorithm: 'HS256'
+            });
+            let insertData = {
+                id : id,
+                passwd : newPw,
+                name : name,
+                phoneNum : phoneNum,
+                email : email,
+                signTime : Date.now(),
+                accessToken : token,
+                salt : salt
+            }
+
+            const data = await pool.query('insert into UserInfo(id, passwd, name, phoneNum, email, signTime, accessToken, salt) values(?,?,?,?,?,?,?,?)',[id,newPw,name,phoneNum,email,Date.now(),token,salt]);
+
+            return res.json(Object.assign(data[0],insertData))
+        } catch (err) {
+            return res.status(500).json(err)
         }
-
-        const data = await pool.query('insert into UserInfo(id, passwd, name, phoneNum, email, signTime, accessToken, salt) values(?,?,?,?,?,?,?,?)',[id,newPw,name,phoneNum,email,Date.now(),token,salt]);
-
-        return res.json(Object.assign(data[0],insertData))
-    } catch (err) {
-        return res.status(500).json(err)
     }
+
 })
 /**
  * @swagger
