@@ -36,6 +36,7 @@ app.use('/auth',require('./routes/auth'));
 app.use('/notice',require('./routes/notice'));
 app.use('/event',require('./routes/event'));
 app.use('/search',require('./routes/search'));
+app.use('/cart',require('./routes/cart'));
 
 const swaggerSpec = swaggerJSDoc(swaggerOption);
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));

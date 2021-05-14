@@ -5,15 +5,21 @@ const pool = require('../utils/pool');
 /**
  * @swagger
  * tags:
- *   name: notice
- *   description: 공지사항
+ *   name: cart
+ *   description: 장바구니
  */
 /**
  * @swagger
- * /notice :
+ * /cart :
  *   get:
- *     summary: 전체 공지사항 조회
- *     tags: [notice]
+ *     summary: 장바구니 조회
+ *     tags: [cart]
+ *     parameters:
+ *       - in: header
+ *         name: x-access-token
+ *         type: string
+ *         format: uuid
+ *         required: true
  *     responses:
  *       200:
  *         description: 성공
@@ -26,52 +32,23 @@ const pool = require('../utils/pool');
  */
 
 router.get('/', async (req, res) => {
-    try {
-        const data = await pool.query('select * from Notice');
-        return res.json(data[0]);
-    } catch (err) {
-        return res.status(400).json(err);
-    }
-});
-/**
- * @swagger
- * /notice/{noticeSeq}:
- *   get:
- *     summary: 공지사항 상세 조회
- *     tags: [notice]
- *     parameters:
- *       - in: path
- *         name: noticeSeq
- *         required: true
- *         type: int
- *         description: 공지사항 Seq 정보
- *     responses:
- *       200:
- *         description: 성공
- *       403:
- *         $ref: '#/components/res/Forbidden'
- *       404:
- *         $ref: '#/components/res/NotFound'
- *       400:
- *         $ref: '#/components/res/BadRequest'
- */
-router.get('/:noticeSeq', async (req, res) => {
-    try {
-        let noticeSeq = req.params.noticeSeq;
-        console.log(noticeSeq)
-        const data=await pool.query('select * from Notice where noticeSeq =?',noticeSeq);
-        return res.json(data[0]);
-    }catch (err) {
-        return res.status(400).json(err);
+    if(req.userInfo){
+        let userSeq = req.userInfo.userSeq;
+        try{
+            const data = await pool.query('select * from Cart where userSeq=?',userSeq);
+            return res.json(data[0]);
+        }catch (err) {
+            return res.status(400).json(err);
+        }
     }
 });
 
 /**
  * @swagger
- * /notice/add:
+ * /cart/add/{productSeq}:
  *   post:
- *     summary: 공지사항 추가
- *     tags: [notice]
+ *     summary: 장바구니 추가
+ *     tags: [cart]
  *     consumes:
  *       - application/x-www-form-urlencoded
  *     requestBody:
@@ -80,28 +57,20 @@ router.get('/:noticeSeq', async (req, res) => {
  *              schema:
  *                  type: object
  *                  properties:
- *                      title:
- *                          type: varchar(45)
- *                      content:
- *                          type: mediumtext
- *                      image:
- *                          type: varchar(300)
- *                      start_date:
- *                          type: datetime
- *                      end_date:
- *                          type: datetime
- *              required:
- *                  - title
- *                  - content
- *                  - image
- *                  - start_date
- *                  - end_date
+ *                      count:
+ *                          type: int
+ *                          description: 상품 수량
  *     parameters:
  *       - in: header
  *         name: x-access-token
  *         type: string
  *         format: uuid
  *         required: true
+ *       - in: path
+ *         name: productSeq
+ *         required: true
+ *         type: int
+ *         description: 상품 Seq 정보
  *     responses:
  *       200:
  *         description: 성공
@@ -112,11 +81,18 @@ router.get('/:noticeSeq', async (req, res) => {
  *       400:
  *         $ref: '#/components/res/BadRequest'
  */
-router.post('/add', async (req, res) => {
+router.post('/add/:productSeq', async (req, res) => {
     if(req.userInfo){
         try {
-            const {title,content,image,start_date,end_date} = req.body;
-            const data = await pool.query('INSERT INTO Notice SET ?', {title,content,image,start_date,end_date})
+            const {productSeq}=req.params
+            const {count}=req.body;
+            const productData = await pool.query('select image,title,price from Product where productSeq=?',[productSeq])
+            console.log(productData[0][0]);
+            let image = productData[0][0].image
+            let title = productData[0][0].title
+            let price = productData[0][0].price
+            let userSeq = req.userInfo.userSeq;
+            const data = await pool.query('INSERT INTO Cart SET ?', {productSeq,userSeq,image,title,price,count})
             return res.json(data[0]);
         } catch (err) {
             return res.status(400).json(err);
@@ -129,10 +105,10 @@ router.post('/add', async (req, res) => {
 
 /**
  * @swagger
- * /notice/re/{noticeSeq}:
+ * /cart/re/{cartSeq}:
  *   post:
- *     summary: 공지사항 수정하기
- *     tags: [notice]
+ *     summary: 장바구니 수정하기
+ *     tags: [cart]
  *     consumes:
  *       - application/x-www-form-urlencoded
  *     requestBody:
@@ -141,22 +117,8 @@ router.post('/add', async (req, res) => {
  *              schema:
  *                  type: object
  *                  properties:
- *                      title:
- *                          type: varchar(45)
- *                      content:
- *                          type: mediumtext
- *                      image:
- *                          type: varchar(300)
- *                      start_date:
- *                          type: datetime
- *                      end_date:
- *                          type: datetime
- *              required:
- *                  - title
- *                  - content
- *                  - image
- *                  - start_date
- *                  - end_date
+ *                      count:
+ *                          type: int
  *     parameters:
  *       - in: header
  *         name: x-access-token
@@ -164,10 +126,10 @@ router.post('/add', async (req, res) => {
  *         format: uuid
  *         required: true
  *       - in: path
- *         name: noticeSeq
+ *         name: cartSeq
  *         required: true
  *         type: int
- *         description: 공지사항 Seq 정보
+ *         description: 장바구니 Seq 정보
  *     responses:
  *       200:
  *         description: 성공
@@ -178,13 +140,12 @@ router.post('/add', async (req, res) => {
  *       400:
  *         $ref: '#/components/res/BadRequest'
  */
-router.post("/re/:noticeSeq", async (req, res) => {
+router.post("/re/:cartSeq", async (req, res) => {
     if(req.userInfo){
         try {
-            let noticeSeq = req.params.noticeSeq;
-            console.log(noticeSeq);
-            const {title,content,image,start_date,end_date} = req.body;
-            const result = await pool.query('UPDATE Notice SET title=?,content=?,image=?,start_date=?,end_date=? WHERE noticeSeq=?', [title,content,image,start_date,end_date,noticeSeq]);
+            let cartSeq = req.params.cartSeq;
+            const {count} = req.body;
+            const result = await pool.query('UPDATE Cart SET count=? WHERE cartSeq=?', [count,cartSeq]);
             return res.json(result[0])
         } catch (err) {
             res.status(400).json(err);
@@ -197,10 +158,10 @@ router.post("/re/:noticeSeq", async (req, res) => {
 
 /**
  * @swagger
- * /notice/ki/{noticeSeq}:
+ * /cart/ki/{cartSeq}:
  *   delete:
- *     summary: 상품 삭제
- *     tags: [notice]
+ *     summary: 장바구니 상품 삭제
+ *     tags: [cart]
  *     parameters:
  *       - in: header
  *         name: x-access-token
@@ -208,10 +169,10 @@ router.post("/re/:noticeSeq", async (req, res) => {
  *         format: uuid
  *         required: true
  *       - in: path
- *         name: noticeSeq
+ *         name: cartSeq
  *         required: true
  *         type: int
- *         description: 공지사항 Seq 정보
+ *         description: 장바구니 Seq 정보
  *     responses:
  *       200:
  *         description: 성공
@@ -222,11 +183,11 @@ router.post("/re/:noticeSeq", async (req, res) => {
  *       400:
  *         $ref: '#/components/res/BadRequest'
  */
-router.delete('/ki/:noticeSeq', async (req, res) => {
+router.delete('/ki/:cartSeq', async (req, res) => {
     if(req.userInfo){
         try {
-            let noticeSeq = req.params.noticeSeq;
-            const result = await pool.query('delete from Notice WHERE noticeSeq=?',noticeSeq);
+            let cartSeq = req.params.cartSeq;
+            const result = await pool.query('delete from Cart WHERE cartSeq=?',cartSeq);
             return res.json(result[0])
         } catch (err) {
             res.status(400).json(err);
