@@ -12,14 +12,14 @@ const pool = require('../utils/pool');
  * @swagger
  * /search/{keyword}:
  *   get:
- *     summary: 제목 검색하기
+ *     summary: 검색하기
  *     tags: [search]
  *     parameters:
  *       - in: path
  *         name: keyword
  *         required: true
  *         type: int
- *         description: 검색 키워드
+ *         description: 검색 키워드(제목,카테고리,작가,내용,가격)
  *     responses:
  *       200:
  *         description: 성공
