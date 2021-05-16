@@ -27,7 +27,7 @@ const pool = require('../utils/pool');
 
 router.get('/', async (req, res) => {
     try {
-        const data = await pool.query('select * from Notice');
+        const data = await pool.query('select title,content,image,date_format(start_date,\'%Y-%m-%d\'),date_format(end_date,\'%Y-%m-%d\') from Notice');
         return res.json(data[0]);
     } catch (err) {
         return res.status(400).json(err);

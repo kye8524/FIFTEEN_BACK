@@ -38,6 +38,7 @@ app.use('/event',require('./routes/event'));
 app.use('/search',require('./routes/search'));
 app.use('/cart',require('./routes/cart'));
 app.use('/delivery',require('./routes/delivery'));
+app.use('/order',require('./routes/order'));
 
 
 const swaggerSpec = swaggerJSDoc(swaggerOption);
