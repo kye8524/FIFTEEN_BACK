@@ -27,7 +27,7 @@ const pool = require('../utils/pool');
 
 router.get('/', async (req, res) => {
     try {
-        const data = await pool.query('select * from Event');
+        const data = await pool.query('select eventSeq,title,content,image,date_format(start_date,\'%Y-%m-%d\') as start_date,date_format(end_date,\'%Y-%m-%d\')as end_date from Event');
         return res.json(data[0]);
     } catch (err) {
         return res.status(400).json(err);

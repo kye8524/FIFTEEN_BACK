@@ -199,7 +199,7 @@ router.post("/re/:noticeSeq", async (req, res) => {
  * @swagger
  * /notice/ki/{noticeSeq}:
  *   delete:
- *     summary: 상품 삭제
+ *     summary: 공지사항 삭제
  *     tags: [notice]
  *     parameters:
  *       - in: header
