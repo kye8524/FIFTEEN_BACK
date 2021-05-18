@@ -59,7 +59,7 @@ router.get('/:noticeSeq', async (req, res) => {
     try {
         let noticeSeq = req.params.noticeSeq;
         console.log(noticeSeq)
-        const data=await pool.query('select * from Notice where noticeSeq =?',noticeSeq);
+        const data=await pool.query('select eventSeq,title,content,image,date_format(start_date,\'%Y-%m-%d\') as start_date,date_format(end_date,\'%Y-%m-%d\')as end_date from Notice where noticeSeq =?',noticeSeq);
         return res.json(data[0]);
     }catch (err) {
         return res.status(400).json(err);
