@@ -24,19 +24,7 @@ const upload = multer({
     }),
     limits: {fileSize: 10 * 1024 * 1024},
 });
-router.get('/add', function(req, res){
-    var output = `
-<html>
-<body>
-    <form enctype="multipart/form-data" method="post" action="/event/add">
-        <input type="file" name="image">
-        <input type="submit">
-    </form>
-</body>
-</html>
-    `;
-    res.send(output);
-});
+
 /**
  * @swagger
  * tags:
