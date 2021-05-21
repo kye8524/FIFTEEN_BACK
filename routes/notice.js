@@ -2,6 +2,29 @@ let express = require('express');
 let router = express.Router();
 const pool = require('../utils/pool');
 
+const multer = require('multer');
+const multerS3 = require('multer-s3');
+
+let AWS = require('aws-sdk');
+AWS.config.loadFromPath('./config.json');
+let s3 = new AWS.S3();
+
+const upload = multer({
+    storage: multerS3({
+        s3: s3,
+        bucket: 'fifteenshop',
+        ContentType: multerS3.AUTO_CONTENT_TYPE,
+        key: (req, file, cb) => {
+            console.log(file);
+            let str = file.originalname;
+            let res = str.substring(str.length - 5, str.length);
+            cb(null, Date.now() + "_" + res);
+        },
+        acl: 'public-read',
+    }),
+    limits: {fileSize: 10 * 1024 * 1024},
+});
+
 /**
  * @swagger
  * tags:
@@ -84,8 +107,6 @@ router.get('/:noticeSeq', async (req, res) => {
  *                          type: varchar(45)
  *                      content:
  *                          type: mediumtext
- *                      image:
- *                          type: varchar(300)
  *                      start_date:
  *                          type: datetime
  *                      end_date:
@@ -93,7 +114,6 @@ router.get('/:noticeSeq', async (req, res) => {
  *              required:
  *                  - title
  *                  - content
- *                  - image
  *                  - start_date
  *                  - end_date
  *     parameters:
@@ -112,19 +132,16 @@ router.get('/:noticeSeq', async (req, res) => {
  *       400:
  *         $ref: '#/components/res/BadRequest'
  */
-router.post('/add', async (req, res) => {
-    if(req.userInfo){
+router.post('/add', upload.single('image'),async (req, res) => {
         try {
-            const {title,content,image,start_date,end_date} = req.body;
+            const {title,content,start_date,end_date} = req.body;
+            console.log(req.file);
+            const image = req.file.location;
             const data = await pool.query('INSERT INTO Notice SET ?', {title,content,image,start_date,end_date})
             return res.json(data[0]);
         } catch (err) {
             return res.status(400).json(err);
         }
-    }else {
-        console.log('cookie none');
-        res.status(403).send({msg: "권한이 없습니다."});
-    }
 });
 
 /**
