@@ -138,9 +138,6 @@ async function crypPw(password) {
 router.post('/signup', async (req, res, next) => {
     const { id,passwd,name,email,phoneNum} = req.body
     const data = await pool.query("select * from UserInfo where id=?",[id]);
-    if(data[0][0]){
-        res.status(403).send('<script type="text/javascript">alert("이미 존재하는 아이디입니다.");history.back();</script>')
-    }else{
         try {
             const pwData = await crypPw(passwd);
             const salt = pwData[0];
@@ -163,6 +160,47 @@ router.post('/signup', async (req, res, next) => {
             const data = await pool.query('insert into UserInfo(id, passwd, name, phoneNum, email, signTime, accessToken, salt) values(?,?,?,?,?,?,?,?)',[id,newPw,name,phoneNum,email,Date.now(),token,salt]);
 
             return res.json(Object.assign(data[0],insertData))
+        } catch (err) {
+            return res.status(500).json(err)
+        }
+
+})
+/**
+ * @swagger
+ * /auth/overlap :
+ *   post:
+ *     summary: 아이디 중복체크
+ *     tags: [auth]
+ *     consumes:
+ *       - application/x-www-form-urlencoded
+ *     requestBody:
+ *       content:
+ *          application/x-www-form-urlencoded:
+ *              schema:
+ *                  type: object
+ *                  properties:
+ *                      id:
+ *                          type: varchar(45)
+ *              required:
+ *                  - id
+ *     responses:
+ *       200:
+ *         description: 성공
+ *       403:
+ *         $ref: '#/components/res/Forbidden'
+ *       404:
+ *         $ref: '#/components/res/NotFound'
+ *       400:
+ *         $ref: '#/components/res/BadRequest'
+ */
+router.post('/overlap', async (req, res, next) => {
+    const {id} = req.body
+    const data = await pool.query("select * from UserInfo where id=?",[id]);
+    if(data[0][0]){
+        res.status(403).send({msg: "이미 존재하는 아이디 입니다."});
+    }else{
+        try {
+            res.status(200).send({msg: "사용 가능한 아이디 입니다."});
         } catch (err) {
             return res.status(500).json(err)
         }
