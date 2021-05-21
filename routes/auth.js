@@ -194,18 +194,17 @@ router.post('/signup', async (req, res, next) => {
  *         $ref: '#/components/res/BadRequest'
  */
 router.post('/overlap', async (req, res, next) => {
-    const {id} = req.body
-    const data = await pool.query("select * from UserInfo where id=?",[id]);
-    if(data[0][0]){
-        res.status(403).send({msg: "이미 존재하는 아이디 입니다."});
-    }else{
-        try {
-            res.status(200).send({msg: "사용 가능한 아이디 입니다."});
-        } catch (err) {
-            return res.status(500).json(err)
+    try{
+        const {id} = req.body
+        const data = await pool.query("select * from UserInfo where id=?",[id]);
+        if(data[0][0]){
+            return res.json({msg: "이미 존재하는 아이디 입니다."});
+        }else{
+            return res.json({msg: "사용 가능한 아이디 입니다."});
         }
+    }catch (err) {
+        return res.status(500).json(err)
     }
-
 })
 /**
  * @swagger
