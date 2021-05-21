@@ -167,7 +167,7 @@ router.post('/signup', async (req, res, next) => {
 })
 /**
  * @swagger
- * /auth/overlap :
+ * /auth/overlap_id :
  *   post:
  *     summary: 아이디 중복체크
  *     tags: [auth]
@@ -193,10 +193,55 @@ router.post('/signup', async (req, res, next) => {
  *       400:
  *         $ref: '#/components/res/BadRequest'
  */
-router.post('/overlap', async (req, res, next) => {
+router.post('/overlap_id', async (req, res, next) => {
     try{
         const {id} = req.body
         const data = await pool.query("select * from UserInfo where id=?",[id]);
+        let checkid = new Object();
+        checkid.tf = false;
+        if(data[0][0]){
+            checkid.tf = false;
+            res.send(checkid)
+        }else{
+            checkid.tf = true;
+            res.send(checkid)
+        }
+    }catch (err) {
+        return res.status(500).json(err)
+    }
+})
+/**
+ * @swagger
+ * /auth/overlap_email :
+ *   post:
+ *     summary: 이메일 중복체크
+ *     tags: [auth]
+ *     consumes:
+ *       - application/x-www-form-urlencoded
+ *     requestBody:
+ *       content:
+ *          application/x-www-form-urlencoded:
+ *              schema:
+ *                  type: object
+ *                  properties:
+ *                      email:
+ *                          type: varchar(45)
+ *              required:
+ *                  - email
+ *     responses:
+ *       200:
+ *         description: 성공
+ *       403:
+ *         $ref: '#/components/res/Forbidden'
+ *       404:
+ *         $ref: '#/components/res/NotFound'
+ *       400:
+ *         $ref: '#/components/res/BadRequest'
+ */
+router.post('/overlap_email', async (req, res, next) => {
+    try{
+        const {email} = req.body
+        const data = await pool.query("select * from UserInfo where email=?",[email]);
         let checkid = new Object();
         checkid.tf = false;
         if(data[0][0]){
