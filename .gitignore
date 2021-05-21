@@ -16,8 +16,6 @@
 # Generated files
 .idea/**/contentModel.xml
 
-#config.json
-config.json
 
 # Sensitive or high-churn files
 .idea/**/dataSources/
