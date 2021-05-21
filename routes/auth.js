@@ -197,10 +197,14 @@ router.post('/overlap', async (req, res, next) => {
     try{
         const {id} = req.body
         const data = await pool.query("select * from UserInfo where id=?",[id]);
+        let checkid = new Object();
+        checkid.tf = false;
         if(data[0][0]){
-            return res.json({msg: "이미 존재하는 아이디 입니다."});
+            checkid.tf = false;
+            res.send(checkid)
         }else{
-            return res.json({msg: "사용 가능한 아이디 입니다."});
+            checkid.tf = true;
+            res.send(checkid)
         }
     }catch (err) {
         return res.status(500).json(err)
