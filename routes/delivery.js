@@ -42,6 +42,37 @@ router.get('/', async (req, res) => {
         }
     }
 });
+/**
+ * @swagger
+ * /delivery/{delSeq}:
+ *   get:
+ *     summary: 배송지 상세 조회
+ *     tags: [delivery]
+ *     parameters:
+ *       - in: path
+ *         name: delSeq
+ *         required: true
+ *         type: int
+ *         description: 배송지 Seq 정보
+ *     responses:
+ *       200:
+ *         description: 성공
+ *       403:
+ *         $ref: '#/components/res/Forbidden'
+ *       404:
+ *         $ref: '#/components/res/NotFound'
+ *       400:
+ *         $ref: '#/components/res/BadRequest'
+ */
+router.get('/:delSeq', async (req, res) => {
+    try {
+        let delSeq = req.params.delSeq;
+        const data=await pool.query('select * from Delivery where delSeq =?',delSeq);
+        return res.json(data[0]);
+    }catch (err) {
+        return res.status(400).json(err);
+    }
+});
 
 /**
  * @swagger
