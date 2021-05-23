@@ -62,7 +62,13 @@ router.get('/', async (req, res) => {
  *                          description: 배송지이름
  *                      address:
  *                          type: varchar(200)
- *                          description: 상세 주소
+ *                          description: 주소(동일로 107길 345)
+ *                      address_detail:
+ *                          type: varchar(200)
+ *                          description: 상세주소(112동405호)
+ *                      address_mail:
+ *                          type: varchar(50)
+ *                          description: 우편번호(01775)
  *                      phoneNum:
  *                          type: varchar(11)
  *                          description: 연락처
@@ -89,8 +95,8 @@ router.post('/add', async (req, res) => {
     if(req.userInfo){
         try {
             const userSeq = req.userInfo.userSeq;
-            const {name,address,phoneNum,is_default}=req.body;
-            const data = await pool.query('INSERT INTO Delivery SET ?', {name,address,phoneNum,is_default,userSeq})
+            const {name,address,address_detail,address_mail,phoneNum,is_default}=req.body;
+            const data = await pool.query('INSERT INTO Delivery SET ?', {name,address,address_detail,address_mail,phoneNum,is_default,userSeq})
             return res.json(data[0]);
         } catch (err) {
             return res.status(400).json(err);
@@ -120,7 +126,13 @@ router.post('/add', async (req, res) => {
  *                          description: 배송지이름
  *                      address:
  *                          type: varchar(200)
- *                          description: 상세 주소
+ *                          description: 주소(동일로 107길 345)
+ *                      address_detail:
+ *                          type: varchar(200)
+ *                          description: 상세주소(112동405호)
+ *                      address_mail:
+ *                          type: varchar(50)
+ *                          description: 우편번호(01775)
  *                      phoneNum:
  *                          type: varchar(11)
  *                          description: 연락처
@@ -152,8 +164,8 @@ router.post("/re/:delSeq", async (req, res) => {
     if(req.userInfo){
         try {
             let delSeq = req.params.delSeq;
-            const {name,address,phoneNum,is_default} = req.body;
-            const result = await pool.query('UPDATE Delivery SET name=?,address=?,phoneNum=?,is_default=? WHERE delSeq=?', [name,address,phoneNum,is_default,delSeq]);
+            const {name,address,address_detail,address_mail,phoneNum,is_default} = req.body;
+            const result = await pool.query('UPDATE Delivery SET name=?,address=?,address_detail=?,address_mail=?,phoneNum=?,is_default=? WHERE delSeq=?', [name,address,address_detail,address_mail,phoneNum,is_default,delSeq]);
             return res.json(result[0])
         } catch (err) {
             res.status(400).json(err);
