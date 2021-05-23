@@ -127,8 +127,28 @@ router.post('/add', async (req, res) => {
         try {
             const userSeq = req.userInfo.userSeq;
             const {name,address,address_detail,address_mail,phoneNum,is_default}=req.body;
-            const data = await pool.query('INSERT INTO Delivery SET ?', {name,address,address_detail,address_mail,phoneNum,is_default,userSeq})
-            return res.json(data[0]);
+            console.log(Boolean(is_default>0));
+            if(is_default>0){
+                console.log(is_default+"1")
+                const result = await pool.query('select * from Delivery where is_default=1 AND userSeq=?',[userSeq]);
+                console.log(result[0][0]);
+                if(result[0][0]){
+                    console.log(is_default+"2")
+                    let pre_default = result[0][0].delSeq;
+                    const update = await pool.query('UPDATE Delivery set is_default=0 where delSeq=?',[pre_default]);
+                    const data = await pool.query('INSERT INTO Delivery SET ?', {name,address,address_detail,address_mail,phoneNum,is_default,userSeq})
+                    return res.json(data[0]);
+
+                }else {
+                    console.log(is_default+"3")
+                    const data = await pool.query('INSERT INTO Delivery SET ?', {name,address,address_detail,address_mail,phoneNum,is_default,userSeq})
+                    return res.json(data[0]);
+                }
+            }else{
+                console.log(is_default+"4")
+                const data = await pool.query('INSERT INTO Delivery SET ?', {name,address,address_detail,address_mail,phoneNum,is_default,userSeq})
+                return res.json(data[0]);
+            }
         } catch (err) {
             return res.status(400).json(err);
         }
@@ -140,7 +160,7 @@ router.post('/add', async (req, res) => {
 
 /**
  * @swagger
- * /delivery/re/{delSeq}:
+ * /delivery/re/{delSeq2}:
  *   post:
  *     summary: 배송지 수정
  *     tags: [delivery]
@@ -177,7 +197,7 @@ router.post('/add', async (req, res) => {
  *         format: uuid
  *         required: true
  *       - in: path
- *         name: delSeq
+ *         name: delSeq2
  *         required: true
  *         type: int
  *         description: 배송지 Seq 정보
@@ -191,13 +211,33 @@ router.post('/add', async (req, res) => {
  *       400:
  *         $ref: '#/components/res/BadRequest'
  */
-router.post("/re/:delSeq", async (req, res) => {
+router.post("/re/:delSeq2", async (req, res) => {
     if(req.userInfo){
         try {
-            let delSeq = req.params.delSeq;
+            const userSeq = req.userInfo.userSeq;
+            const delSeq2 = req.params.delSeq2;
             const {name,address,address_detail,address_mail,phoneNum,is_default} = req.body;
-            const result = await pool.query('UPDATE Delivery SET name=?,address=?,address_detail=?,address_mail=?,phoneNum=?,is_default=? WHERE delSeq=?', [name,address,address_detail,address_mail,phoneNum,is_default,delSeq]);
-            return res.json(result[0])
+            if(is_default>0){
+                console.log(is_default+"1")
+                const data = await pool.query('select * from Delivery where is_default=1 AND userSeq=?',[userSeq]);
+                console.log(data[0][0]);
+                if(data[0][0]){
+                    console.log(is_default+"2");
+                    let pre_default = data[0][0].delSeq;
+                    const update = await pool.query('UPDATE Delivery set is_default=0 where delSeq=?',[pre_default]);
+                    const result = await pool.query('UPDATE Delivery SET name=?,address=?,address_detail=?,address_mail=?,phoneNum=?,is_default=? WHERE delSeq=?', [name,address,address_detail,address_mail,phoneNum,is_default,delSeq2]);
+                    return res.json(result[0])
+
+                }else {
+                    console.log(is_default+"3")
+                    const result = await pool.query('UPDATE Delivery SET name=?,address=?,address_detail=?,address_mail=?,phoneNum=?,is_default=? WHERE delSeq=?', [name,address,address_detail,address_mail,phoneNum,is_default,delSeq2]);
+                    return res.json(result[0])
+                }
+            }else{
+                console.log(is_default+"4")
+                const result = await pool.query('UPDATE Delivery SET name=?,address=?,address_detail=?,address_mail=?,phoneNum=?,is_default=? WHERE delSeq=?', [name,address,address_detail,address_mail,phoneNum,is_default,delSeq2]);
+                return res.json(result[0])
+            }
         } catch (err) {
             res.status(400).json(err);
         }
