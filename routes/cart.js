@@ -84,16 +84,26 @@ router.get('/', async (req, res) => {
 router.post('/add/:productSeq', async (req, res) => {
     if(req.userInfo){
         try {
+            const userSeq = req.userInfo.userSeq;
             const {productSeq}=req.params
             const {count}=req.body;
-            const productData = await pool.query('select image,title,price from Product where productSeq=?',[productSeq])
-            console.log(productData[0][0]);
-            let image = productData[0][0].image
-            let title = productData[0][0].title
-            let price = productData[0][0].price
-            let userSeq = req.userInfo.userSeq;
-            const data = await pool.query('INSERT INTO Cart SET ?', {productSeq,userSeq,image,title,price,count})
-            return res.json(data[0]);
+            const is_cart = await pool.query('select * from Cart where productSeq=? AND userSeq=?',[productSeq,userSeq]);
+            if(is_cart[0][0]){
+                let cartSeq=is_cart[0][0].cartSeq;
+                let pre_count = parseInt(is_cart[0][0].count);
+                let final_count=parseInt(count)+pre_count;
+                console.log(final_count);
+                const result = await pool.query('UPDATE Cart set count=? where cartSeq=?',[final_count,cartSeq]);
+                return res.json(result[0]);
+            }else{
+                const productData = await pool.query('select image,title,price from Product where productSeq=?',[productSeq])
+                console.log(productData[0][0]);
+                let image = productData[0][0].image
+                let title = productData[0][0].title
+                let price = productData[0][0].price
+                const data = await pool.query('INSERT INTO Cart SET ?', {productSeq,userSeq,image,title,price,count})
+                return res.json(data[0]);
+            }
         } catch (err) {
             return res.status(400).json(err);
         }
