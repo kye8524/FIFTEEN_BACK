@@ -267,18 +267,16 @@ router.delete('/ki/:productSeq', async (req, res) => {
 });
 /**
  * @swagger
- * /product/{field}:
+ * /product/category/{field}:
  *   get:
- *     summary: 상품 카테고리
+ *     summary: 상품 카테고리 조회
  *     tags: [product]
- *     consumes:
- *       - application/x-www-form-urlencoded
  *     parameters:
  *       - in: path
  *         name: field
  *         required: true
  *         type: varchar(45)
- *         description: 상품 field 정보
+ *         description: 상품 카테고리 정보
  *     responses:
  *       200:
  *         description: 성공
@@ -289,14 +287,14 @@ router.delete('/ki/:productSeq', async (req, res) => {
  *       400:
  *         $ref: '#/components/res/BadRequest'
  */
-router.get("/:field", async (req, res) => {
-        try {
-            let field = req.params.field;
-            console.log(field);
-            const result = await pool.query('select * from Product where field=?', [field]);
-            return res.json(result[0])
-        } catch (err) {
-            res.status(400).json(err);
-        }
+router.get('/category/:field', async (req, res) => {
+    try {
+        let field = req.params.field;
+        console.log(field)
+        const data=await pool.query('select * from Product where field =?',field);
+        return res.json(data[0]);
+    }catch (err) {
+        return res.status(400).json(err);
+    }
 });
 module.exports = router;
