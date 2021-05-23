@@ -265,4 +265,38 @@ router.delete('/ki/:productSeq', async (req, res) => {
         res.status(403).send({msg: "권한이 없습니다."});
     }
 });
+/**
+ * @swagger
+ * /product/{field}:
+ *   post:
+ *     summary: 상품 카테고리
+ *     tags: [product]
+ *     consumes:
+ *       - application/x-www-form-urlencoded
+ *     parameters:
+ *       - in: path
+ *         name: field
+ *         required: true
+ *         type: varchar(45)
+ *         description: 상품 field 정보
+ *     responses:
+ *       200:
+ *         description: 성공
+ *       403:
+ *         $ref: '#/components/res/Forbidden'
+ *       404:
+ *         $ref: '#/components/res/NotFound'
+ *       400:
+ *         $ref: '#/components/res/BadRequest'
+ */
+router.post("/:field", async (req, res) => {
+        try {
+            let field = req.params.field;
+            console.log(field);
+            const result = await pool.query('select * from Product where field=?', [field]);
+            return res.json(result[0])
+        } catch (err) {
+            res.status(400).json(err);
+        }
+});
 module.exports = router;
