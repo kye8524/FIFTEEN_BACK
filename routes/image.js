@@ -4,7 +4,7 @@ const multer = require('multer');
 
 const router = express.Router();
 
-router.post("api/upload", (req, res, next) => {
+router.post("/api/upload", (req, res, next) => {
     // FormData의 경우 req로 부터 데이터를 얻을수 없다.
     // upload 핸들러(multer)를 통해서 데이터를 읽을 수 있다
 
