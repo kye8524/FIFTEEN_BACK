@@ -211,7 +211,61 @@ router.post("/re/:noticeSeq", async (req, res) => {
         res.status(403).send({msg: "권한이 없습니다."});
     }
 });
-
+/**
+ * @swagger
+ * /notice/active/{noticeSeq}:
+ *   post:
+ *     summary: 공지사항 활성화 수정
+ *     tags: [notice]
+ *     consumes:
+ *       - application/x-www-form-urlencoded
+ *     requestBody:
+ *       content:
+ *          application/x-www-form-urlencoded:
+ *              schema:
+ *                  type: object
+ *                  properties:
+ *                      active:
+ *                          type: int
+ *                          description: 활성화(1)비활성화(0)
+ *              required:
+ *                  - active
+ *     parameters:
+ *       - in: header
+ *         name: x-access-token
+ *         type: string
+ *         format: uuid
+ *         required: true
+ *       - in: path
+ *         name: noticeSeq
+ *         required: true
+ *         type: int
+ *         description: 공지사항 Seq 정보
+ *     responses:
+ *       200:
+ *         description: 성공
+ *       403:
+ *         $ref: '#/components/res/Forbidden'
+ *       404:
+ *         $ref: '#/components/res/NotFound'
+ *       400:
+ *         $ref: '#/components/res/BadRequest'
+ */
+router.post("/active/:noticeSeq", async (req, res) => {
+    if(req.userInfo){
+        try {
+            let noticeSeq = req.params.noticeSeq;
+            const {active} = req.body;
+            const result = await pool.query('UPDATE Notice SET active=? WHERE noticeSeq=?', [active,noticeSeq]);
+            return res.json(result[0])
+        } catch (err) {
+            res.status(400).json(err);
+        }
+    }else {
+        console.log('cookie none');
+        res.status(403).send({msg: "권한이 없습니다."});
+    }
+});
 /**
  * @swagger
  * /notice/ki/{noticeSeq}:

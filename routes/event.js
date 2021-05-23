@@ -25,6 +25,31 @@ const upload = multer({
     limits: {fileSize: 10 * 1024 * 1024},
 });
 
+router.get('/add', function(req, res){
+    var output = `
+<html>
+<body>
+    <form enctype="multipart/form-data" method="post" action="/event/add">
+    <div>title<br>
+                    <textarea  name="title" ></textarea></div>
+                    <div>content<br>
+                    <textarea  name="content" ></textarea></div>
+                <div>
+                    <div>
+                        날짜<br>
+                        <input type="date" class="Date" name="start_date" required>
+                        ~
+                        <input type="date" class="Date" name="end_date" required>
+                    </div>
+        <input type="file" name="image">
+        <input type="submit">
+    </form>
+</body>
+</html>
+    `;
+    res.send(output);
+});
+
 /**
  * @swagger
  * tags:
@@ -96,10 +121,10 @@ router.get('/:eventSeq', async (req, res) => {
  *     summary: 이벤트 추가
  *     tags: [event]
  *     consumes:
- *       - application/x-www-form-urlencoded
+ *       - multipart/form-data
  *     requestBody:
  *       content:
- *          application/x-www-form-urlencoded:
+ *          multipart/form-data:
  *              schema:
  *                  type: object
  *                  properties:
@@ -122,6 +147,10 @@ router.get('/:eventSeq', async (req, res) => {
  *         type: string
  *         format: uuid
  *         required: true
+ *       - in: formData
+ *         name: image
+ *         type: file
+ *         format: file
  *     responses:
  *       200:
  *         description: 성공
@@ -137,7 +166,6 @@ router.post('/add', upload.single('image'), async (req, res) => {
             const {title,content,start_date,end_date} = req.body;
             console.log(req.file);
             const image = req.file.location;
-            console.log(image);
             const data = await pool.query('INSERT INTO Event SET ?', {title,content,image,start_date,end_date})
             return res.json(data[0]);
         } catch (err) {
@@ -212,7 +240,61 @@ router.post("/re/:eventSeq", async (req, res) => {
         res.status(403).send({msg: "권한이 없습니다."});
     }
 });
-
+/**
+ * @swagger
+ * /event/active/{eventSeq}:
+ *   post:
+ *     summary: 이벤트 활성화 수정
+ *     tags: [event]
+ *     consumes:
+ *       - application/x-www-form-urlencoded
+ *     requestBody:
+ *       content:
+ *          application/x-www-form-urlencoded:
+ *              schema:
+ *                  type: object
+ *                  properties:
+ *                      active:
+ *                          type: int
+ *                          description: 활성화(1)비활성화(0)
+ *              required:
+ *                  - active
+ *     parameters:
+ *       - in: header
+ *         name: x-access-token
+ *         type: string
+ *         format: uuid
+ *         required: true
+ *       - in: path
+ *         name: eventSeq
+ *         required: true
+ *         type: int
+ *         description: 이벤트 Seq 정보
+ *     responses:
+ *       200:
+ *         description: 성공
+ *       403:
+ *         $ref: '#/components/res/Forbidden'
+ *       404:
+ *         $ref: '#/components/res/NotFound'
+ *       400:
+ *         $ref: '#/components/res/BadRequest'
+ */
+router.post("/active/:eventSeq", async (req, res) => {
+    if(req.userInfo){
+        try {
+            let eventSeq = req.params.eventSeq;
+            const {active} = req.body;
+            const result = await pool.query('UPDATE Event SET active=? WHERE eventSeq=?', [active,eventSeq]);
+            return res.json(result[0])
+        } catch (err) {
+            res.status(400).json(err);
+        }
+    }else {
+        console.log('cookie none');
+        res.status(403).send({msg: "권한이 없습니다."});
+    }
+});
 /**
  * @swagger
  * /event/ki/{eventSeq}:
