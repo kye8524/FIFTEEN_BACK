@@ -268,7 +268,7 @@ router.delete('/ki/:productSeq', async (req, res) => {
 /**
  * @swagger
  * /product/{field}:
- *   post:
+ *   get:
  *     summary: 상품 카테고리
  *     tags: [product]
  *     consumes:
@@ -289,7 +289,7 @@ router.delete('/ki/:productSeq', async (req, res) => {
  *       400:
  *         $ref: '#/components/res/BadRequest'
  */
-router.post("/:field", async (req, res) => {
+router.get("/:field", async (req, res) => {
         try {
             let field = req.params.field;
             console.log(field);
