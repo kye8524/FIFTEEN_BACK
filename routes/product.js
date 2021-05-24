@@ -291,7 +291,7 @@ router.get('/category/:field', async (req, res) => {
     try {
         let field = req.params.field;
         console.log(field)
-        const data=await pool.query('select * from Product where field =?',field);
+        const data=await pool.query('select * from Product where field like ?', '%' + field + '%');
         return res.json(data[0]);
     }catch (err) {
         return res.status(400).json(err);

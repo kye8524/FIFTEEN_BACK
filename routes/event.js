@@ -113,7 +113,30 @@ router.get('/:eventSeq', async (req, res) => {
         return res.status(400).json(err);
     }
 });
-
+/**
+ * @swagger
+ * /event/banner/active:
+ *   get:
+ *     summary: 활성화 이벤트 조회
+ *     tags: [event]
+ *     responses:
+ *       200:
+ *         description: 성공
+ *       403:
+ *         $ref: '#/components/res/Forbidden'
+ *       404:
+ *         $ref: '#/components/res/NotFound'
+ *       400:
+ *         $ref: '#/components/res/BadRequest'
+ */
+router.get('/banner/active', async (req, res) => {
+    try {
+        const data=await pool.query('select eventSeq,title,content,image,date_format(start_date,\'%Y-%m-%d\') as start_date,date_format(end_date,\'%Y-%m-%d\')as end_date,active from Event where active=1');
+        return res.json(data[0]);
+    }catch (err) {
+        return res.status(400).json(err);
+    }
+});
 /**
  * @swagger
  * /event/add:

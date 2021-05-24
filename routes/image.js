@@ -1,6 +1,7 @@
 const express = require("express");
 const upload = require('./fileupload');
 const multer = require('multer');
+const pool = require('../utils/pool');
 
 const router = express.Router();
 
@@ -14,11 +15,12 @@ router.post("/api/upload", (req, res, next) => {
         } else if (err) {
             return next(err);
         }
-        console.log('원본파일명 : ' + req.file.originalname)
-        console.log('저장파일명 : ' + req.file.filename)
-        console.log('크기 : ' + req.file.size)
+        //console.log('원본파일명 : ' + req.file.originalname)
+        //console.log('저장파일명 : ' + req.file.filename)
+        //console.log('크기 : ' + req.file.size)
         console.log('경로 : ' + req.file.location) //s3 업로드시 업로드 url을 가져옴
-        return res.json({success:1});
+        const result = pool.query("INSERT INTO Notice(image) value (?)",[req.file.location])
+        return res.json(result[0]);
     });
 });
 

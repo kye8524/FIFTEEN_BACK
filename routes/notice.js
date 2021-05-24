@@ -2,28 +2,8 @@ let express = require('express');
 let router = express.Router();
 const pool = require('../utils/pool');
 
+const upload = require('./fileupload');
 const multer = require('multer');
-const multerS3 = require('multer-s3');
-
-let AWS = require('aws-sdk');
-AWS.config.loadFromPath('./config.json');
-let s3 = new AWS.S3();
-
-const upload = multer({
-    storage: multerS3({
-        s3: s3,
-        bucket: 'fifteenshop',
-        ContentType: multerS3.AUTO_CONTENT_TYPE,
-        key: (req, file, cb) => {
-            console.log(file);
-            let str = file.originalname;
-            let res = str.substring(str.length - 5, str.length);
-            cb(null, Date.now() + "_" + res);
-        },
-        acl: 'public-read',
-    }),
-    limits: {fileSize: 10 * 1024 * 1024},
-});
 
 /**
  * @swagger
@@ -50,7 +30,7 @@ const upload = multer({
 
 router.get('/', async (req, res) => {
     try {
-        const data = await pool.query("select noticeSeq,title,content,image,date_format(start_date,'%Y-%m-%d') as start_date,date_format(end_date,'%Y-%m-%d')as end_date from Notice");
+        const data = await pool.query("select noticeSeq,title,content,image,date_format(start_date,'%Y-%m-%d') as start_date,date_format(end_date,'%Y-%m-%d')as end_date,active from Notice");
         return res.json(data[0]);
     } catch (err) {
         return res.status(400).json(err);
@@ -82,7 +62,31 @@ router.get('/:noticeSeq', async (req, res) => {
     try {
         let noticeSeq = req.params.noticeSeq;
         console.log(noticeSeq)
-        const data=await pool.query('select noticeSeq,title,content,image,date_format(start_date,\'%Y-%m-%d\') as start_date,date_format(end_date,\'%Y-%m-%d\')as end_date from Notice where noticeSeq =?',noticeSeq);
+        const data=await pool.query('select noticeSeq,title,content,image,date_format(start_date,\'%Y-%m-%d\') as start_date,date_format(end_date,\'%Y-%m-%d\')as end_date,active from Notice where noticeSeq =?',noticeSeq);
+        return res.json(data[0]);
+    }catch (err) {
+        return res.status(400).json(err);
+    }
+});
+/**
+ * @swagger
+ * /notice/banner/active:
+ *   get:
+ *     summary: 활성화 공지사항 조회
+ *     tags: [notice]
+ *     responses:
+ *       200:
+ *         description: 성공
+ *       403:
+ *         $ref: '#/components/res/Forbidden'
+ *       404:
+ *         $ref: '#/components/res/NotFound'
+ *       400:
+ *         $ref: '#/components/res/BadRequest'
+ */
+router.get('/banner/active', async (req, res) => {
+    try {
+        const data=await pool.query('select noticeSeq,title,content,image,date_format(start_date,\'%Y-%m-%d\') as start_date,date_format(end_date,\'%Y-%m-%d\')as end_date,active from Notice where active=1');
         return res.json(data[0]);
     }catch (err) {
         return res.status(400).json(err);
@@ -132,12 +136,10 @@ router.get('/:noticeSeq', async (req, res) => {
  *       400:
  *         $ref: '#/components/res/BadRequest'
  */
-router.post('/add', upload.single('image'),async (req, res) => {
+router.post('/add', async (req, res,next) => {
         try {
             const {title,content,start_date,end_date} = req.body;
-            console.log(req.file);
-            const image = req.file.location;
-            const data = await pool.query('INSERT INTO Notice SET ?', {title,content,image,start_date,end_date})
+            const data = await pool.query('INSERT INTO Notice SET ?', {title,content,start_date,end_date})
             return res.json(data[0]);
         } catch (err) {
             return res.status(400).json(err);
