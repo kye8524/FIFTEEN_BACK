@@ -170,10 +170,6 @@ router.get('/banner/active', async (req, res) => {
  *         type: string
  *         format: uuid
  *         required: true
- *       - in: formData
- *         name: image
- *         type: file
- *         format: file
  *     responses:
  *       200:
  *         description: 성공
@@ -184,12 +180,10 @@ router.get('/banner/active', async (req, res) => {
  *       400:
  *         $ref: '#/components/res/BadRequest'
  */
-router.post('/add', upload.single('image'), async (req, res) => {
+router.post('/add', async (req, res) => {
             try {
             const {title,content,start_date,end_date} = req.body;
-            console.log(req.file);
-            const image = req.file.location;
-            const data = await pool.query('INSERT INTO Event SET ?', {title,content,image,start_date,end_date})
+            const data = await pool.query('INSERT INTO Event SET ?', {title,content,start_date,end_date})
             return res.json(data[0]);
         } catch (err) {
             return res.status(400).json(err);
@@ -214,8 +208,6 @@ router.post('/add', upload.single('image'), async (req, res) => {
  *                          type: varchar(45)
  *                      content:
  *                          type: mediumtext
- *                      image:
- *                          type: varchar(300)
  *                      start_date:
  *                          type: datetime
  *                      end_date:
@@ -223,7 +215,6 @@ router.post('/add', upload.single('image'), async (req, res) => {
  *              required:
  *                  - title
  *                  - content
- *                  - image
  *                  - start_date
  *                  - end_date
  *     parameters:
@@ -252,8 +243,8 @@ router.post("/re/:eventSeq", async (req, res) => {
         try {
             let eventSeq = req.params.eventSeq;
             console.log(eventSeq);
-            const {title,content,image,start_date,end_date} = req.body;
-            const result = await pool.query('UPDATE Event SET title=?,content=?,image=?,start_date=?,end_date=? WHERE eventSeq=?', [title,content,image,start_date,end_date,eventSeq]);
+            const {title,content,start_date,end_date} = req.body;
+            const result = await pool.query('UPDATE Event SET title=?,content=?,start_date=?,end_date=? WHERE eventSeq=?', [title,content,start_date,end_date,eventSeq]);
             return res.json(result[0])
         } catch (err) {
             res.status(400).json(err);

@@ -164,8 +164,6 @@ router.post('/add', async (req, res,next) => {
  *                          type: varchar(45)
  *                      content:
  *                          type: mediumtext
- *                      image:
- *                          type: varchar(300)
  *                      start_date:
  *                          type: datetime
  *                      end_date:
@@ -173,7 +171,6 @@ router.post('/add', async (req, res,next) => {
  *              required:
  *                  - title
  *                  - content
- *                  - image
  *                  - start_date
  *                  - end_date
  *     parameters:
@@ -202,8 +199,8 @@ router.post("/re/:noticeSeq", async (req, res) => {
         try {
             let noticeSeq = req.params.noticeSeq;
             console.log(noticeSeq);
-            const {title,content,image,start_date,end_date} = req.body;
-            const result = await pool.query('UPDATE Notice SET title=?,content=?,image=?,start_date=?,end_date=? WHERE noticeSeq=?', [title,content,image,start_date,end_date,noticeSeq]);
+            const {title,content,start_date,end_date} = req.body;
+            const result = await pool.query('UPDATE Notice SET title=?,content=?,start_date=?,end_date=? WHERE noticeSeq=?', [title,content,start_date,end_date,noticeSeq]);
             return res.json(result[0])
         } catch (err) {
             res.status(400).json(err);
