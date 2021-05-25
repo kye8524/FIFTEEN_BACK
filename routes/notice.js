@@ -2,9 +2,6 @@ let express = require('express');
 let router = express.Router();
 const pool = require('../utils/pool');
 
-const upload = require('./fileupload');
-const multer = require('multer');
-
 /**
  * @swagger
  * tags:
@@ -199,8 +196,8 @@ router.post("/re/:noticeSeq", async (req, res) => {
         try {
             let noticeSeq = req.params.noticeSeq;
             console.log(noticeSeq);
-            const {title,content,start_date,end_date} = req.body;
-            const result = await pool.query('UPDATE Notice SET title=?,content=?,start_date=?,end_date=? WHERE noticeSeq=?', [title,content,start_date,end_date,noticeSeq]);
+            const {title,content,start_date,end_date,image} = req.body;
+            const result = await pool.query('UPDATE Notice SET title=?,content=?,start_date=?,end_date=?,image=? WHERE noticeSeq=?', [title,content,start_date,end_date,image,noticeSeq]);
             return res.json(result[0])
         } catch (err) {
             res.status(400).json(err);

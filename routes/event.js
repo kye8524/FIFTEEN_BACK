@@ -3,31 +3,6 @@ let router = express.Router();
 const pool = require('../utils/pool');
 
 
-router.get('/add', function(req, res){
-    var output = `
-<html>
-<body>
-    <form enctype="multipart/form-data" method="post" action="/event/add">
-    <div>title<br>
-                    <textarea  name="title" ></textarea></div>
-                    <div>content<br>
-                    <textarea  name="content" ></textarea></div>
-                <div>
-                    <div>
-                        날짜<br>
-                        <input type="date" class="Date" name="start_date" required>
-                        ~
-                        <input type="date" class="Date" name="end_date" required>
-                    </div>
-        <input type="file" name="image">
-        <input type="submit">
-    </form>
-</body>
-</html>
-    `;
-    res.send(output);
-});
-
 /**
  * @swagger
  * tags:
@@ -160,8 +135,8 @@ router.get('/banner/active', async (req, res) => {
  */
 router.post('/add', async (req, res) => {
             try {
-            const {title,content,start_date,end_date} = req.body;
-            const data = await pool.query('INSERT INTO Event SET ?', {title,content,start_date,end_date})
+            const {title,content,start_date,end_date,image} = req.body;
+            const data = await pool.query('INSERT INTO Event SET ?', {title,content,start_date,end_date,image})
             return res.json(data[0]);
         } catch (err) {
             return res.status(400).json(err);
@@ -221,8 +196,8 @@ router.post("/re/:eventSeq", async (req, res) => {
         try {
             let eventSeq = req.params.eventSeq;
             console.log(eventSeq);
-            const {title,content,start_date,end_date} = req.body;
-            const result = await pool.query('UPDATE Event SET title=?,content=?,start_date=?,end_date=? WHERE eventSeq=?', [title,content,start_date,end_date,eventSeq]);
+            const {title,content,start_date,end_date,image} = req.body;
+            const result = await pool.query('UPDATE Event SET title=?,content=?,start_date=?,end_date=?,image=? WHERE eventSeq=?', [title,content,start_date,end_date,image,eventSeq]);
             return res.json(result[0])
         } catch (err) {
             res.status(400).json(err);

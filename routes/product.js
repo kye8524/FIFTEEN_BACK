@@ -88,8 +88,6 @@ router.get('/:productSeq', async (req, res) => {
  *                          type: mediumtext
  *                      content:
  *                          type: mediumtext
- *                      image:
- *                          type: varchar(300)
  *                      author:
  *                          type: varchar(45)
  *                      price:
@@ -109,7 +107,6 @@ router.get('/:productSeq', async (req, res) => {
  *                  - field
  *                  - a_intro
  *                  - content
- *                  - image
  *                  - author
  *                  - price
  *                  - mileage
