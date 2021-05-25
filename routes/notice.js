@@ -2,6 +2,8 @@ let express = require('express');
 let router = express.Router();
 const pool = require('../utils/pool');
 
+const upload = require('./fileupload');
+const multer = require('multer');
 
 /**
  * @swagger
@@ -136,8 +138,8 @@ router.get('/banner/active', async (req, res) => {
  */
 router.post('/add', async (req, res,next) => {
         try {
-            const {title,content,start_date,end_date} = req.body;
-            const data = await pool.query('INSERT INTO Notice SET ?', {title,content,start_date,end_date})
+            const {title,content,start_date,end_date,image} = req.body;
+            const data = await pool.query('INSERT INTO Notice SET ?', {title,content,start_date,end_date,image})
             return res.json(data[0]);
         } catch (err) {
             return res.status(400).json(err);
