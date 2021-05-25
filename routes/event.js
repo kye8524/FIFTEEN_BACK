@@ -5,9 +5,6 @@ const pool = require('../utils/pool');
 const multer = require('multer');
 const multerS3 = require('multer-s3');
 
-let AWS = require('aws-sdk');
-AWS.config.loadFromPath('./config.json');
-let s3 = new AWS.S3();
 
 const upload = multer({
     storage: multerS3({
