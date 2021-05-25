@@ -2,25 +2,6 @@ let express = require('express');
 let router = express.Router();
 const pool = require('../utils/pool');
 
-const multer = require('multer');
-const multerS3 = require('multer-s3');
-
-
-const upload = multer({
-    storage: multerS3({
-        s3: s3,
-        bucket: 'fifteenshop',
-        ContentType: multerS3.AUTO_CONTENT_TYPE,
-        key: (req, file, cb) => {
-            console.log(file);
-            let str = file.originalname;
-            let res = str.substring(str.length - 5, str.length);
-            cb(null, Date.now() + "_" + res);
-        },
-        acl: 'public-read',
-    }),
-    limits: {fileSize: 10 * 1024 * 1024},
-});
 
 router.get('/add', function(req, res){
     var output = `

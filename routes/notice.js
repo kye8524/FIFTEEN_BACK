@@ -2,8 +2,6 @@ let express = require('express');
 let router = express.Router();
 const pool = require('../utils/pool');
 
-const upload = require('./fileupload');
-const multer = require('multer');
 
 /**
  * @swagger
