@@ -33,49 +33,22 @@ const pool = require('../utils/pool');
 router.get('/:keyword', async (req, res) => {
     try {
         let keyword = req.params.keyword;
-        console.log(keyword)
-        const data=await pool.query('select * from Product where concat(title,field,author,price) like ?', '%' + keyword + '%');
-        if(data[0]){
-            return res.json(data[0]);
-        }else{
-            return res.json({"message":"검색결과가 없습니다."})
-        }
-    }catch (err) {
-        return res.status(400).json(err);
-    }
-});
-/**
- * @swagger
- * /search/price/{keyword}:
- *   get:
- *     summary: 상품 가격 검색하기
- *     tags: [search]
- *     parameters:
- *       - in: path
- *         name: keyword
- *         required: true
- *         type: int
- *         description: 검색 키워드(가격)
- *     responses:
- *       200:
- *         description: 성공
- *       403:
- *         $ref: '#/components/res/Forbidden'
- *       404:
- *         $ref: '#/components/res/NotFound'
- *       400:
- *         $ref: '#/components/res/BadRequest'
- */
-router.get('/price/:keyword', async (req, res) => {
-    try {
-        let keyword = req.params.keyword;
         const arr = keyword.split("~");
-        console.log(arr)
-        const data=await pool.query('select * from Product where price between ? and ?', [arr[0],arr[1]]);
-        if(data[0]){
-            return res.json(data[0]);
+        console.log(arr.length);
+        if(arr.length===2){
+            const data=await pool.query('select * from Product where price between ? and ?', [arr[0],arr[1]]);
+            if(data[0]){
+                return res.json(data[0]);
+            }else{
+                return res.json({"message":"검색결과가 없습니다."})
+            }
         }else{
-            return res.json({"message":"검색결과가 없습니다."})
+            const data=await pool.query('select * from Product where concat(title,field,author,price) like ?', '%' + keyword + '%');
+            if(data[0]){
+                return res.json(data[0]);
+            }else{
+                return res.json({"message":"검색결과가 없습니다."})
+            }
         }
     }catch (err) {
         return res.status(400).json(err);
