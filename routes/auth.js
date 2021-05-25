@@ -302,11 +302,11 @@ router.post('/login', async (req, res, next)=>{
             let newPw = await pwBySalt(passwd, userData[0][0].salt);
             if(userData[0][0].passwd === newPw){
                 return res.json(userData[0][0]);
-            }else{
-                return res.status(403).send({"message":"Incorrect email or password"});
+            }else {
+                return res.json({"status": 0});
             }
         }else{
-            return res.status(403).send({"message":"Incorrect email or password"});
+            return res.json({"status":0});
         }
     }catch (err) {
         console.log(err);
