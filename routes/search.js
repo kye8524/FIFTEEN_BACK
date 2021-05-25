@@ -80,7 +80,7 @@ router.get('/notice/:keyword', async (req, res) => {
     try {
         let keyword = req.params.keyword;
         console.log(keyword)
-        const data=await pool.query('select * from Notice where concat(title,content) like ?', '%' + keyword + '%');
+        const data=await pool.query('select noticeSeq,title,content,image,date_format(start_date,\'%Y-%m-%d\') as start_date,date_format(end_date,\'%Y-%m-%d\')as end_date,active from Notice where concat(title,content) like ?', '%' + keyword + '%');
         if(data[0]){
             return res.json(data[0]);
         }else{
@@ -116,7 +116,7 @@ router.get('/event/:keyword', async (req, res) => {
     try {
         let keyword = req.params.keyword;
         console.log(keyword)
-        const data=await pool.query('select * from Event where concat(title,content) like ?', '%' + keyword + '%');
+        const data=await pool.query('select eventSeq,title,content,image,date_format(start_date,\'%Y-%m-%d\') as start_date,date_format(end_date,\'%Y-%m-%d\')as end_date,active from Event where concat(title,content) like ?', '%' + keyword + '%');
         if(data[0]){
             return res.json(data[0]);
         }else{

@@ -301,16 +301,16 @@ router.post('/login', async (req, res, next)=>{
         if(userData[0][0]){
             let newPw = await pwBySalt(passwd, userData[0][0].salt);
             if(userData[0][0].passwd === newPw){
-                res.json(userData[0][0]);
+                return res.json(userData[0][0]);
             }else{
-                res.status(403).send({"message":"Incorrect email or password"});
+                return res.status(403).send({"message":"Incorrect email or password"});
             }
         }else{
-            res.status(403).send({"message":"Incorrect email or password"});
+            return res.status(403).send({"message":"Incorrect email or password"});
         }
     }catch (err) {
         console.log(err);
-        res.status(500).json(err);
+        return res.status(500).json(err);
     }
 })
 /**
