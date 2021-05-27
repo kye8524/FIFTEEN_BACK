@@ -96,12 +96,13 @@ router.post('/add/:productSeq', async (req, res) => {
                 const result = await pool.query('UPDATE Cart set count=? where cartSeq=?',[final_count,cartSeq]);
                 return res.json(result[0]);
             }else{
-                const productData = await pool.query('select image,title,price from Product where productSeq=?',[productSeq])
+                const productData = await pool.query('select image,title,price,delivery from Product where productSeq=?',[productSeq])
                 console.log(productData[0][0]);
                 let image = productData[0][0].image
                 let title = productData[0][0].title
                 let price = productData[0][0].price
-                const data = await pool.query('INSERT INTO Cart SET ?', {productSeq,userSeq,image,title,price,count})
+                let delivery = productData[0][0].delivery
+                const data = await pool.query('INSERT INTO Cart SET ?', {productSeq,userSeq,image,title,price,delivery,count})
                 return res.json(data[0]);
             }
         } catch (err) {
