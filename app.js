@@ -40,6 +40,9 @@ app.use('/cart',require('./routes/cart'));
 app.use('/delivery',require('./routes/delivery'));
 app.use('/order',require('./routes/order'));
 app.use('/image',require('./routes/image'));
+app.use('/review',require('./routes/review'));
+app.use('/qna',require('./routes/qna'));
+
 
 
 const swaggerSpec = swaggerJSDoc(swaggerOption);
