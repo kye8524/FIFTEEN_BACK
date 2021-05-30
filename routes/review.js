@@ -30,7 +30,7 @@ const f = 'YYYY-MM-DD';
 
 router.get('/', async (req, res) => {
     try {
-        const data = await pool.query("select reviewSeq,title,content,userSeq,productSeq,score,delivery,recommend,date_format(regdate,'%Y-%m-%d')as readate from Review");
+        const data = await pool.query("select reviewSeq,title,content,userSeq,user_id,productSeq,score,delivery,recommend,date_format(regdate,'%Y-%m-%d')as readate from Review");
         return res.json(data[0]);
     } catch (err) {
         return res.status(400).json(err);
@@ -61,7 +61,7 @@ router.get('/', async (req, res) => {
 router.get('/:productSeq', async (req, res) => {
     try {
         let productSeq = req.params.productSeq;
-        const data=await pool.query('select reviewSeq,title,content,userSeq,productSeq,score,delivery,recommend,date_format(regdate,\'%Y-%m-%d\')as readate from Review where productSeq =?',productSeq);
+        const data=await pool.query('select reviewSeq,title,content,userSeq,user_id,productSeq,score,delivery,recommend,date_format(regdate,\'%Y-%m-%d\')as readate from Review where productSeq =?',productSeq);
         return res.json(data[0]);
     }catch (err) {
         return res.status(400).json(err);
@@ -93,7 +93,7 @@ router.get('/detail/:reviewSeq', async (req, res) => {
     try {
         let reviewSeq = req.params.reviewSeq;
         console.log(reviewSeq)
-        const data=await pool.query('select reviewSeq,title,content,userSeq,productSeq,score,delivery,recommend,date_format(regdate,\'%Y-%m-%d\')as readate from Review where reviewSeq =?',reviewSeq);
+        const data=await pool.query('select reviewSeq,title,content,userSeq,user_id,productSeq,score,delivery,recommend,date_format(regdate,\'%Y-%m-%d\')as readate from Review where reviewSeq =?',reviewSeq);
         return res.json(data[0]);
     }catch (err) {
         return res.status(400).json(err);
@@ -157,9 +157,10 @@ router.post('/add', async (req, res,next) => {
         try {
             const userSeq = req.userInfo.userSeq;
             const regdate = moment(d).format(f);
-            console.log(regdate);
+            const userData = await pool.query('select id from UserInfo where userSeq=?',[userSeq]);
+            const user_id = userData[0][0].id;
             const {title,content,score,delivery,recommend,productSeq} = req.body;
-            const data = await pool.query('INSERT INTO Review SET ?', {title,content,regdate,userSeq,productSeq,score,delivery,recommend})
+            const data = await pool.query('INSERT INTO Review SET ?', {title,content,regdate,userSeq,productSeq,score,delivery,recommend,user_id});
             return res.json(data[0]);
         } catch (err) {
             return res.status(400).json(err);
