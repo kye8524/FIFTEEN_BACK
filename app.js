@@ -28,9 +28,7 @@ app.use(tokenMiddleWare);
 app.use(cors());
 
 var indexRouter = require('./routes/index');
-var usersRouter = require('./routes/users');
 app.use('/', indexRouter);
-app.use('/users', usersRouter);
 app.use('/product',require('./routes/product'));
 app.use('/auth',require('./routes/auth'));
 app.use('/notice',require('./routes/notice'));

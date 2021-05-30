@@ -1,6 +1,10 @@
 let express = require('express');
 let router = express.Router();
 const pool = require('../utils/pool');
+const moment = require('moment');
+
+const d = new Date();
+const f = 'YYYY-MM-DD';
 
 /**
  * @swagger
@@ -10,7 +14,7 @@ const pool = require('../utils/pool');
  */
 /**
  * @swagger
- * /order/all :
+ * /order :
  *   get:
  *     summary: 모든 고객 주문내역 조회
  *     tags: [order]
@@ -31,10 +35,10 @@ const pool = require('../utils/pool');
  *         $ref: '#/components/res/BadRequest'
  */
 
-router.get('/all', async (req, res) => {
+router.get('/', async (req, res) => {
     if(req.userInfo){
         try{
-            const data = await pool.query('select orderSeq,date_format(date,\'%Y-%m-%d\') as date, productSeq, count, field,price, pay_price, order_state, userSeq from Orders');
+            const data = await pool.query('select orderSeq, userSeq, productSeq, title, count, price, pay_price, delivery, date_format(date,\'%Y-%m-%d\') as date, order_state, field from Orders');
             return res.json(data[0]);
         }catch (err) {
             return res.status(400).json(err);
@@ -43,9 +47,9 @@ router.get('/all', async (req, res) => {
 });
 /**
  * @swagger
- * /order :
+ * /order/{userSeq} :
  *   get:
- *     summary: 주문내역 조회
+ *     summary: 회원별 주문내역 조회
  *     tags: [order]
  *     parameters:
  *       - in: header
@@ -64,11 +68,11 @@ router.get('/all', async (req, res) => {
  *         $ref: '#/components/res/BadRequest'
  */
 
-router.get('/', async (req, res) => {
+router.get('/:userSeq', async (req, res) => {
     if(req.userInfo){
         let userSeq = req.userInfo.userSeq;
         try{
-            const data = await pool.query('select orderSeq,date_format(date,\'%Y-%m-%d\') as date, delivery, productSeq, count, price, pay_price, order_state, userSeq from Orders where userSeq',userSeq);
+            const data = await pool.query('select orderSeq, userSeq, productSeq, title, count, price, pay_price, delivery, date_format(date,\'%Y-%m-%d\') as date, order_state, field from Orders where userSeq=?',[userSeq]);
             return res.json(data[0]);
         }catch (err) {
             return res.status(400).json(err);
@@ -93,9 +97,15 @@ router.get('/', async (req, res) => {
  *                      count:
  *                          type: int
  *                          description: 상품 수량
- *                      date:
- *                          type: datetime
- *                          description: 주문 날짜 2021-02-21
+ *                      delivery:
+ *                          type: varchar(100)
+ *                          description: 배송지 이름
+ *                      price:
+ *                          type: int
+ *                          description: 상품 가격
+ *                      pay_price:
+ *                          type: varchar(100)
+ *                          description: 결제 금액
  *     parameters:
  *       - in: header
  *         name: x-access-token
@@ -122,20 +132,89 @@ router.post('/add/:productSeq', async (req, res) => {
         try {
             const {productSeq}=req.params
             let userSeq = req.userInfo.userSeq;
-            const {count,date}=req.body;
-            const productData = await pool.query('select image,title,price,field,discount,mileage from Product where productSeq=?',[productSeq])
-            let image = productData[0][0].image
+            const {count,delivery,price,pay_price}=req.body;
+            const date = moment(d).format(f);
+            const productData = await pool.query('select title,field from Product where productSeq=?',[productSeq])
             let title = productData[0][0].title
-            let price = productData[0][0].price
-            let mileage = productData[0][0].mileage
+            //let price = productData[0][0].price
+            //let mileage = productData[0][0].mileage
             let field = productData[0][0].field
-            let discount = productData[0][0].discount
-            let pay_price = price*(100-discount)/100
-            const userData = await pool.query('select name from Delivery where userSeq=?',[userSeq])
-            let delivery = userData[0][0].name
-            const data = await pool.query('INSERT INTO Orders SET ?', {userSeq,productSeq,image,title,count,price,pay_price,delivery,date,field});
-            const updateUser = await pool.query('UPDATE UserInfo set totalOder=totalOder+1,mileage=? where userSeq=?',[mileage,userSeq]);
-            console.log(updateUser[0]);
+            //let discount = productData[0][0].discount
+           // let pay_price = price*(100-discount)/100
+            const data = await pool.query('INSERT INTO Orders SET ?', {userSeq,productSeq,title,count,price,pay_price,delivery,date,field});
+            //const updateUser = await pool.query('UPDATE UserInfo set totalOder=totalOder+1,mileage=? where userSeq=?',[mileage,userSeq]);
+            //console.log(updateUser[0]);
+            return res.json(data[0]);
+        } catch (err) {
+            return res.status(400).json(err);
+        }
+    }else {
+        console.log('cookie none');
+        res.status(403).send({msg: "권한이 없습니다."});
+    }
+});
+
+/**
+ * @swagger
+ * /order/cart_add/{productSeq}:
+ *   post:
+ *     summary: 장바구니 주문내역 추가 == 구매하기
+ *     tags: [order]
+ *     consumes:
+ *       - application/x-www-form-urlencoded
+ *     requestBody:
+ *       content:
+ *          application/x-www-form-urlencoded:
+ *              schema:
+ *                  type: object
+ *                  properties:
+ *                      count:
+ *                          type: int
+ *                          description: 상품 수량
+ *                      delivery:
+ *                          type: varchar(100)
+ *                          description: 배송지 이름
+ *                      title:
+ *                          type: varchar(50)
+ *                          description: 상품 제목
+ *                      price:
+ *                          type: int
+ *                          description: 상품 가격
+ *                      pay_price:
+ *                          type: varchar(100)
+ *                          description: 결제 금액
+ *                      field:
+ *                          type: varchar(45)
+ *                          description: 상품 카테고리
+ *     parameters:
+ *       - in: header
+ *         name: x-access-token
+ *         type: string
+ *         format: uuid
+ *         required: true
+ *       - in: path
+ *         name: productSeq
+ *         required: true
+ *         type: int
+ *         description: 상품 Seq 정보
+ *     responses:
+ *       200:
+ *         description: 성공
+ *       403:
+ *         $ref: '#/components/res/Forbidden'
+ *       404:
+ *         $ref: '#/components/res/NotFound'
+ *       400:
+ *         $ref: '#/components/res/BadRequest'
+ */
+router.post('/cart_add/:productSeq', async (req, res) => {
+    if(req.userInfo){
+        try {
+            const {productSeq}=req.params
+            let userSeq = req.userInfo.userSeq;
+            const {count,delivery,title,price,pay_price,field}=req.body;
+            const date = moment(d).format(f);
+            const data = await pool.query('INSERT INTO Orders SET ?', {userSeq,productSeq,title,count,price,pay_price,delivery,date,field});
             return res.json(data[0]);
         } catch (err) {
             return res.status(400).json(err);
