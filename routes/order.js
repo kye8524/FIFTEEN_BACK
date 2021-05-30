@@ -77,6 +77,9 @@ router.get('/:userSeq', async (req, res) => {
         }catch (err) {
             return res.status(400).json(err);
         }
+    }else {
+        console.log('cookie none');
+        res.status(403).send({msg: "권한이 없습니다."});
     }
 });
 
@@ -174,18 +177,9 @@ router.post('/add/:productSeq', async (req, res) => {
  *                      delivery:
  *                          type: varchar(100)
  *                          description: 배송지 이름
- *                      title:
- *                          type: varchar(50)
- *                          description: 상품 제목
  *                      price:
  *                          type: int
  *                          description: 상품 가격
- *                      pay_price:
- *                          type: varchar(100)
- *                          description: 결제 금액
- *                      field:
- *                          type: varchar(45)
- *                          description: 상품 카테고리
  *     parameters:
  *       - in: header
  *         name: x-access-token
@@ -212,8 +206,28 @@ router.post('/cart_add/:productSeq', async (req, res) => {
         try {
             const {productSeq}=req.params
             let userSeq = req.userInfo.userSeq;
-            const {count,delivery,title,price,pay_price,field}=req.body;
+            const {count,delivery,price}=req.body;
             const date = moment(d).format(f);
+            const pay_price=0;
+            const data = await pool.query('INSERT INTO Orders SET ?', {userSeq,productSeq,title,count,price,pay_price,delivery,date,field});
+            return res.json(data[0]);
+        } catch (err) {
+            return res.status(400).json(err);
+        }
+    }else {
+        console.log('cookie none');
+        res.status(403).send({msg: "권한이 없습니다."});
+    }
+});
+
+router.post('/test', async (req, res) => {
+    if(req.userInfo){
+        try {
+            const {productSeq}=req.params
+            let userSeq = req.userInfo.userSeq;
+            const {count,delivery,price}=req.body;
+            const date = moment(d).format(f);
+            const pay_price=0;
             const data = await pool.query('INSERT INTO Orders SET ?', {userSeq,productSeq,title,count,price,pay_price,delivery,date,field});
             return res.json(data[0]);
         } catch (err) {

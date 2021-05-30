@@ -38,16 +38,16 @@ router.get('/', async (req, res) => {
 });
 /**
  * @swagger
- * /qna/{productSeq}:
+ * /qna/{userSeq}:
  *   get:
- *     summary: 상품별 문의 조회
+ *     summary: 회원별 문의 조회
  *     tags: [qna]
  *     parameters:
- *       - in: path
- *         name: productSeq
+ *       - in: header
+ *         name: x-access-token
+ *         type: string
+ *         format: uuid
  *         required: true
- *         type: int
- *         description: 상품 Seq 정보
  *     responses:
  *       200:
  *         description: 성공
@@ -58,13 +58,18 @@ router.get('/', async (req, res) => {
  *       400:
  *         $ref: '#/components/res/BadRequest'
  */
-router.get('/:productSeq', async (req, res) => {
-    try {
-        let productSeq = req.params.productSeq;
-        const data=await pool.query('select qnaSeq,title,content,userSeq,productSeq,answer,answer_state,product_title,count,orderSeq,date_format(regdate,\'%Y-%m-%d\')as readate from QnA where productSeq =?',productSeq);
-        return res.json(data[0]);
-    }catch (err) {
-        return res.status(400).json(err);
+router.get('/:userSeq', async (req, res) => {
+    if(req.userInfo){
+        try {
+            let userSeq = req.userInfo.userSeq;
+            const data=await pool.query('select qnaSeq,title,content,userSeq,productSeq,answer,answer_state,product_title,count,orderSeq,date_format(regdate,\'%Y-%m-%d\')as readate from QnA where userSeq =?',userSeq);
+            return res.json(data[0]);
+        }catch (err) {
+            return res.status(400).json(err);
+        }
+    }else {
+        console.log('cookie none');
+        res.status(403).send({msg: "권한이 없습니다."});
     }
 });
 /**
